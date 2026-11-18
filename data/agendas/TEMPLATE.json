@@ -1,0 +1,27 @@
+{
+  "meetings": [
+    {
+      "id": "replace-with-unique-meeting-id",
+      "body": "bodies.id from the database, for example bos",
+      "starts_at": "2026-12-01T09:00:00-08:00",
+      "title": "Regular meeting",
+      "location": "Room or address",
+      "agenda_url": "https://official-site.example/agenda",
+      "status": "scheduled",
+      "items": [
+        {
+          "id": "replace-with-unique-item-id",
+          "title": "Item title as the agenda states it",
+          "summary": "One plain-language sentence, reviewed by a person.",
+          "what_it_decides": "What this decides",
+          "who_it_affects": "Who it affects",
+          "stage": "introduced | committee | vote | decided | continued | information_only",
+          "outcome": "Only when stage is decided, from the official record",
+          "stage_basis": "agenda | official",
+          "comment_deadline": "2026-12-01T17:00:00-08:00",
+          "source_url": "https://official-site.example/agenda#item"
+        }
+      ]
+    }
+  ]
+}

@@ -1,0 +1,65 @@
+/* Design tokens. Change colors, spacing, and type here only.
+   Palette: deep navy, deep red, and off-white. Ratios checked against WCAG 2.1 AA. */
+:root {
+  /* Core palette */
+  --navy: #1b2a4a;             /* primary text, top bar. 13:1 on off-white */
+  --navy-hover: #142038;
+  --red: #9e1b32;              /* primary actions. 7.9:1 with white text */
+  --red-hover: #7a1426;
+  --off-white: #f8f5ee;        /* page background */
+
+  /* Surfaces and text */
+  --bg: var(--off-white);
+  --surface: #ffffff;
+  --surface-2: #f2eee4;
+  --ink: var(--navy);
+  --ink-2: #33405c;
+  --muted: #5a6478;            /* 5.4:1 on off-white */
+  --line: #d9d3c4;             /* decorative dividers only */
+  --border-control: #7d8496;   /* input and checkbox borders need 3:1 */
+
+  /* Brand roles */
+  --brand: var(--red);
+  --brand-hover: var(--red-hover);
+  --brand-ink: #ffffff;
+  --brand-soft: #f4e2e5;
+  --navy-soft: #e3e8f1;
+  --topbar-bg: var(--navy);
+  --topbar-ink: var(--off-white);  /* 13:1 on navy */
+  --focus: var(--red);
+
+  /* Status. Each pairs with its soft background at 7:1 or better */
+  --ok: #1f5c3a;
+  --ok-soft: #e0efe6;
+  --warn: #6b4500;
+  --warn-soft: #f6eccd;
+  --danger: var(--red);
+  --danger-soft: #f6e0e4;
+  --neutral-soft: #e9e5dc;
+
+  /* Effects */
+  --scrim: rgba(27, 42, 74, 0.5);
+  --skeleton-a: #ebe6da;
+  --skeleton-b: #f8f5ee;
+  --shadow-color: 27, 42, 74;
+  --shadow: 0 1px 2px rgba(var(--shadow-color), 0.08), 0 6px 20px rgba(var(--shadow-color), 0.08);
+
+  /* Radius, spacing, type */
+  --radius-sm: 8px;
+  --radius: 14px;
+  --space-1: 4px;
+  --space-2: 8px;
+  --space-3: 12px;
+  --space-4: 16px;
+  --space-5: 24px;
+  --space-6: 36px;
+  --font: system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial, sans-serif;
+  --font-display: "Iowan Old Style", Georgia, "Times New Roman", serif;
+  --maxw: 1080px;
+}
+
+/* Accent for the contributor star on navy. Contrast with navy is about 10:1. */
+:root { --highlight: #f3d77a; }
+
+/* Hover tint for the account button in the top bar */
+:root { --topbar-hover: #2c3d62; }
