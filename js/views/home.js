@@ -1,46 +1,28 @@
-// The main screen, in three columns: your bodies, upcoming meetings, and one agenda item.
-// On narrow screens the columns stack in the same order.
+// The main screen, in three columns: your bodies, upcoming meetings, and one agenda item with its discussion.
+// A banner appears above everything while a meeting is in progress. On narrow screens the columns stack.
 import { state } from '../state.js';
 import { esc } from '../lib/dom.js';
-import { LEVELS, LEVEL_ORDER, STAGES, STAGE_LABEL } from '../config.js';
+import { fmtDateTime } from '../lib/format.js';
+import { LEVELS, LEVEL_ORDER, STAGE_LABEL, COMMENT_TEMPLATE } from '../config.js';
 import { skeleton, empty } from '../components/ui.js';
+import { toast } from '../components/toast.js';
 import { listAllBodies, listUpcomingMeetings, getItem } from '../services/bodies.js';
-
-const fmt = iso => new Date(iso).toLocaleString('en-US', {
-  weekday: 'short', month: 'short', day: 'numeric', hour: 'numeric', minute: '2-digit',
-});
-
-function stageSteps(stage) {
-  if (stage === 'information_only' || stage === 'continued') {
-    return `<p><span class="badge">${esc(STAGE_LABEL[stage])}</span></p>`;
-  }
-  const idx = STAGES.indexOf(stage);
-  const decided = stage === 'decided';
-  return `
-    <ol class="stages" aria-label="Where this item stands">
-      ${STAGES.map((s, i) => {
-        const done = decided || i < idx;
-        const current = !decided && i === idx;
-        const cls = done ? 'done' : current ? 'current' : '';
-        const prefix = done ? '<span class="sr-only">Done: </span>' : current ? '<span class="sr-only">Current: </span>' : '';
-        return `<li class="${cls}"${current ? ' aria-current="step"' : ''}>${prefix}${esc(STAGE_LABEL[s])}</li>`;
-      }).join('')}
-    </ol>`;
-}
+import { listComments, addComment } from '../services/comments.js';
+import { itemPanel, discussionHtml } from './item.js';
 
 function bodyCard(body, next) {
   return `
     <a class="card body-card" href="#/body/${esc(body.id)}">
       <span class="meta">${esc(LEVELS[body.level])}${body.districtLabel ? ` · ${esc(body.districtLabel)}` : ''}</span>
       <strong>${esc(body.name)}</strong>
-      <span class="muted">${next ? `Next meeting: ${esc(fmt(next.startsAt))}` : 'No upcoming meeting loaded'}</span>
+      <span class="muted">${next ? `Next meeting: ${esc(fmtDateTime(next.startsAt))}` : 'No upcoming meeting loaded'}</span>
     </a>`;
 }
 
 function meetingCard(m) {
   return `
     <article class="card meeting">
-      <p class="meta">${esc(fmt(m.startsAt))} · ${esc(m.bodyName)}</p>
+      <p class="meta">${esc(fmtDateTime(m.startsAt))} · ${esc(m.bodyName)}${m.status === 'in_progress' ? ' · in progress' : ''}</p>
       <h3>${esc(m.title)}</h3>
       ${m.items.length
         ? `<ul class="plain">${m.items.map(i => `
@@ -52,28 +34,11 @@ function meetingCard(m) {
     </article>`;
 }
 
-function itemDetail(item) {
-  const m = item.meeting;
+function liveBanner(m) {
   return `
-    <p class="meta">${esc(m.bodyName)} · ${esc(fmt(m.startsAt))}${m.location ? ` · ${esc(m.location)}` : ''}</p>
-    <h3 class="item-title">${esc(item.title)}</h3>
-    ${stageSteps(item.stage)}
-    ${item.stageBasis !== 'official'
-      ? '<p class="note">The stage comes from the agenda. It hasn\'t been checked against the official record yet.</p>'
-      : ''}
-    <dl class="facts">
-      ${item.summary ? `<dt>Summary</dt><dd>${esc(item.summary)}</dd>` : ''}
-      ${item.whatItDecides ? `<dt>What this decides</dt><dd>${esc(item.whatItDecides)}</dd>` : ''}
-      ${item.whoItAffects ? `<dt>Who it affects</dt><dd>${esc(item.whoItAffects)}</dd>` : ''}
-      ${item.commentDeadline ? `<dt>Public comment deadline</dt><dd>${esc(fmt(item.commentDeadline))}</dd>` : ''}
-      ${item.outcome ? `<dt>Outcome</dt><dd>${esc(item.outcome)}</dd>` : ''}
-    </dl>
-    ${item.sourceUrl
-      ? `<p><a href="${esc(item.sourceUrl)}" target="_blank" rel="noopener noreferrer">Read the official agenda item</a></p>`
-      : ''}
-    <section class="discussion-note">
-      <h4>Neighbor discussion</h4>
-      <p class="note">Discussion for each item opens in a later wave.</p>
+    <section class="live" aria-label="Meeting in progress">
+      <p><strong>In progress:</strong> ${esc(m.bodyName)}, ${esc(m.title)}.</p>
+      <a class="btn btn--ghost btn--sm" href="#/body/${esc(m.bodyId)}">Open ${esc(m.bodyName)}</a>
     </section>`;
 }
 
@@ -82,11 +47,15 @@ export async function renderHome(root, itemId) {
   const all = await listAllBodies();
   const mine = LEVEL_ORDER.flatMap(level => all.filter(b => b.level === level && state.me.bodyIds.includes(b.id)));
   const meetings = await listUpcomingMeetings(state.me.bodyIds);
+  const live = meetings.find(m => m.status === 'in_progress');
 
   const selectedId = itemId || meetings.find(m => m.items.length)?.items[0]?.id || null;
   const item = selectedId ? await getItem(selectedId) : null;
+  const comments = item ? await listComments(item.id) : [];
+  const canComment = Boolean(item) && state.me.bodyIds.includes(item.meeting.bodyId);
 
   root.innerHTML = `
+    ${live ? liveBanner(live) : ''}
     <header class="civic-head">
       <div>
         <p class="eyebrow">Your government</p>
@@ -110,9 +79,46 @@ export async function renderHome(root, itemId) {
       <section class="col col--wide" aria-labelledby="item-h">
         <h2 id="item-h">Agenda item</h2>
         ${item
-          ? `<article class="card">${itemDetail(item)}</article>`
+          ? itemPanel(item, comments, canComment)
           : empty('Choose an agenda item to see where it stands.')}
       </section>
     </div>
     <p class="sample-note">Sample data. Replace with official agendas before any public test.</p>`;
+
+  // One listener per action for this screen. Copy the how-to-comment template.
+  root.addEventListener('click', e => {
+    const copy = e.target.closest('[data-action="copy-template"]');
+    if (!copy) return;
+    const text = copy.dataset.text || COMMENT_TEMPLATE;
+    navigator.clipboard?.writeText(text)
+      .then(() => toast('Template copied'))
+      .catch(() => toast('Could not copy. Select the template text instead.', 'error'));
+  });
+
+  // Post a comment. Information comments need a source link. The database also checks residency.
+  root.addEventListener('submit', async e => {
+    if (e.target.id !== 'comment-form' || !item) return;
+    e.preventDefault();
+    const form = e.target;
+    const data = new FormData(form);
+    const kind = data.get('kind');
+    const body = String(data.get('body') || '');
+    const source = String(data.get('source') || '').trim();
+    const errorEl = form.querySelector('.form-error');
+    errorEl.textContent = '';
+    if (!body.trim()) { errorEl.textContent = 'Write your comment first.'; return; }
+    if (kind === 'information' && !/^https:\/\/\S+$/.test(source)) {
+      errorEl.textContent = 'Information comments need a source link that starts with https://';
+      return;
+    }
+    try {
+      await addComment({ userId: state.me.id, itemId: item.id, kind, body, sourceUrl: source });
+      const fresh = await listComments(item.id);
+      root.querySelector('#discussion').innerHTML = discussionHtml(fresh, canComment);
+      toast('Comment posted');
+      root.querySelector('#discussion-h')?.focus();
+    } catch (err) {
+      errorEl.textContent = err.message;
+    }
+  });
 }

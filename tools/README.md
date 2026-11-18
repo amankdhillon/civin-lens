@@ -11,7 +11,7 @@ Needs Node 18 or newer.
 ## Run
 Use the SECRET key from Project Settings > API Keys. It bypasses the security rules, so keep it on your computer only. Never put it in the website or in the repository.
 
-  
+    SUPABASE_URL=https://your-project.supabase.co SUPABASE_SECRET_KEY=... node import-agenda.mjs
 
 The import checks every file before writing anything. Running it again updates existing meetings and items, so stages change as the agenda changes.
 

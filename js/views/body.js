@@ -1,12 +1,9 @@
 // One governing body: what it is, its meetings, and where to find it. Who represents you comes in a later wave.
 import { esc } from '../lib/dom.js';
+import { fmtDateTime } from '../lib/format.js';
 import { LEVELS, STAGE_LABEL } from '../config.js';
 import { skeleton, empty } from '../components/ui.js';
 import { getBody, listMeetingsFor } from '../services/bodies.js';
-
-const fmt = iso => new Date(iso).toLocaleString('en-US', {
-  weekday: 'short', month: 'short', day: 'numeric', year: 'numeric', hour: 'numeric', minute: '2-digit',
-});
 
 export async function renderBody(id, root) {
   root.innerHTML = skeleton(2);
@@ -26,7 +23,7 @@ export async function renderBody(id, root) {
       ${meetings.length
         ? `<ul class="plain">${meetings.map(m => `
             <li>
-              <p class="meta">${esc(fmt(m.startsAt))}${m.status !== 'scheduled' ? ` · ${esc(m.status)}` : ''}</p>
+              <p class="meta">${esc(fmtDateTime(m.startsAt, true))}${m.status !== 'scheduled' ? ` · ${esc(m.status)}` : ''}</p>
               <p>${esc(m.title)}</p>
               ${m.items.length
                 ? `<ul class="plain">${m.items.map(i => `<li><a href="#/item/${esc(i.id)}">${esc(i.title)}</a> <span class="tag">${esc(STAGE_LABEL[i.stage])}</span></li>`).join('')}</ul>`

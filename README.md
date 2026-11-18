@@ -12,7 +12,6 @@ Wave 1 covers address-to-bodies lookup, the main three-column screen, body pages
 5. Load the sample agendas (see `tools/README.md`), or leave them empty and use the list.
 6. Host the folder on GitHub Pages or any static host.
 
-https://rvqfgwidcjhfmowxekkh.supabase.co/rest/v1/
 ## Structure
     index.html          Shell: top bar, toasts, modal, one script tag
     css/                Tokens, base, layout, and components (shared with BallotBridge), plus civic.css

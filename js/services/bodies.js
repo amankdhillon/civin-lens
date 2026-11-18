@@ -11,6 +11,8 @@ const toBody = r => ({
   about: r.about,
   sourceUrl: safe(r.source_url),
   agendaUrl: safe(r.agenda_url),
+  watchUrl: safe(r.watch_url),
+  commentGuide: r.comment_guide ?? '',
 });
 
 const toMeeting = r => ({
@@ -36,19 +38,21 @@ export async function getBody(id) {
   return toBody(row);
 }
 
-// Upcoming meetings for the given bodies, soonest first.
+// Meetings in progress first, then upcoming ones, soonest first.
 export async function listUpcomingMeetings(bodyIds) {
   if (!bodyIds.length) return [];
-  const rows = unwrap(await sb().from('meetings')
-    .select('*, bodies(name, level), items(id, title, stage)')
-    .in('body_id', bodyIds)
-    .gte('starts_at', new Date().toISOString())
-    .order('starts_at')
-    .limit(60));
-  return rows.map(toMeeting);
+  const select = '*, bodies(name, level), items(id, title, stage)';
+  const [live, upcoming] = await Promise.all([
+    sb().from('meetings').select(select).in('body_id', bodyIds).eq('status', 'in_progress'),
+    sb().from('meetings').select(select).in('body_id', bodyIds)
+      .gte('starts_at', new Date().toISOString()).order('starts_at').limit(60),
+  ]);
+  const seen = new Map();
+  for (const row of [...unwrap(live), ...unwrap(upcoming)]) seen.set(row.id, row);
+  return [...seen.values()].map(toMeeting);
 }
 
-// Every meeting for one body, past and upcoming, newest first.
+// Every meeting for one body, newest first.
 export async function listMeetingsFor(bodyId) {
   const rows = unwrap(await sb().from('meetings')
     .select('*, bodies(name, level), items(id, title, stage)')
@@ -60,12 +64,12 @@ export async function listMeetingsFor(bodyId) {
 
 export async function getItem(id) {
   const row = unwrap(await sb().from('items')
-    .select('*, meetings(id, starts_at, title, location, agenda_url, body_id, bodies(id, name, level, district_label))')
+    .select('*, decided:bodies!decided_by_body_id(name), meetings(id, starts_at, title, location, agenda_url, body_id, bodies(id, name, level, district_label, watch_url, comment_guide))')
     .eq('id', id)
     .maybeSingle());
   if (!row) return null;
   const m = row.meetings;
-  const b = m?.bodies;
+  const b = m.bodies;
   return {
     id: row.id,
     title: row.title,
@@ -77,6 +81,9 @@ export async function getItem(id) {
     stageBasis: row.stage_basis,
     commentDeadline: row.comment_deadline,
     sourceUrl: safe(row.source_url),
+    decidedBy: row.decided?.name ?? '',
+    approvalPath: row.approval_path ?? [],
+    verifiedAt: row.verified_at,
     meeting: {
       id: m.id,
       startsAt: m.starts_at,
@@ -86,6 +93,8 @@ export async function getItem(id) {
       bodyName: b.name,
       level: b.level,
       districtLabel: b.district_label,
+      watchUrl: safe(b.watch_url),
+      commentGuide: b.comment_guide ?? '',
     },
   };
 }

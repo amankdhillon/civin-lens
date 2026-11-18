@@ -49,11 +49,14 @@ for (const file of files) {
       if (it.outcome && it.stage !== 'decided') errors.push(`${iw}: outcome is only allowed when stage is decided`);
       if (it.stage_basis && !BASIS.includes(it.stage_basis)) errors.push(`${iw}: stage_basis must be agenda or official`);
       if (!isHttps(it.source_url)) errors.push(`${iw}: source_url must start with https://`);
+      if (it.decided_by && !bodyIds.has(it.decided_by)) errors.push(`${iw}: decided_by "${it.decided_by}" is not a known body`);
       items.push({
         id: it.id, meeting_id: m.id, title: it.title, summary: it.summary ?? '',
         what_it_decides: it.what_it_decides ?? '', who_it_affects: it.who_it_affects ?? '',
         stage: it.stage, outcome: it.outcome ?? '', stage_basis: it.stage_basis ?? 'agenda',
         comment_deadline: it.comment_deadline ?? null, source_url: it.source_url ?? '',
+        decided_by_body_id: it.decided_by ?? null, approval_path: it.approval_path ?? [],
+        verified_at: it.verified_at ?? null,
         updated_at: new Date().toISOString(),
       });
     }

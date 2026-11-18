@@ -1,7 +1,7 @@
 // The only file you edit to connect Civic Lens.
 // Use a SEPARATE Supabase project from BallotBridge. The publishable key is public. Row Level Security protects the data.
-export const SUPABASE_URL = 'https://rvqfgwidcjhfmowxekkh.supabase.co';
-export const SUPABASE_KEY = 'sb_publishable_TduPKAxZQRMOfqHioIEnrw_4HwD1Mra';
+export const SUPABASE_URL = 'https://YOUR-CIVIC-PROJECT.supabase.co';
+export const SUPABASE_KEY = 'YOUR-PUBLISHABLE-KEY';
 
 export const LEVELS = {
   federal: 'U.S. House',
@@ -23,3 +23,18 @@ export const STAGE_LABEL = {
   continued: 'Continued',
   information_only: 'Information only',
 };
+
+// Comments carry a type, so facts stay apart from opinions. Information must link to a source.
+export const COMMENT_KINDS = [
+  { value: 'question', label: 'Question' },
+  { value: 'information', label: 'Information, with a source' },
+  { value: 'opinion', label: 'Opinion' },
+];
+
+// Used when a body hasn't written its own how-to-comment guide.
+export const COMMENT_TEMPLATE = [
+  'Item: [item title from the agenda]',
+  'My position: [support, oppose, or question]',
+  'My comment (keep it under the speaker time limit):',
+  'Name and neighborhood (optional):',
+].join('\n');
