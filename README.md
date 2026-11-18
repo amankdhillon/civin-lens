@@ -11,7 +11,7 @@ Wave 1 covers address-to-bodies lookup, the main three-column screen, body pages
 4. Put the project URL and publishable key in `js/config.js`.
 5. Load the sample agendas (see `tools/README.md`), or leave them empty and use the list.
 6. Host the folder on GitHub Pages or any static host.
-sb_publishable_TduPKAxZQRMOfqHioIEnrw_4HwD1Mra
+
 https://rvqfgwidcjhfmowxekkh.supabase.co/rest/v1/
 ## Structure
     index.html          Shell: top bar, toasts, modal, one script tag
